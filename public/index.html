@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>動物路殺查詢</title>
+  <link href="/stylesheets/style.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      background-image: url('/images/animal.webp');
+      background-repeat: no-repeat;
+      background-size: cover;
+    }
+    #total_chart {
+      width: 80%;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    #animal_report_form {
+      text-align: center;
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    #report_result {
+      text-align: center;
+    }
+
+    .forms-container {
+      display: flex;
+      justify-content: center; /* 水平居中对齐 */
+    }
+
+    .form-container {
+      width: 15%; /* 调整表单的宽度 */
+    }
+
+    .form-container p {
+      margin-top: 0; /* 清除段落的默认上外边距 */
+    }
+  </style>
+</head>
+
+<body>
+<h1>2011~2024年動物路殺查詢、一般動物、貓、狗</h1>
+
+<form id="animal_report_form">
+  <label for="report_type">查詢種類:</label>
+  <select id="report_type" name="report_type">
+    <option value="animal_reports">一般動物</option>
+    <option value="cats">貓</option>
+    <option value="dogs">狗</option>
+  </select><br><br>
+  <label for="year">年份:</label>
+  <input id="year" name="year" type="number" min="2011" max="2024"><br><br>
+  <label for="month">月份:</label>
+  <select id="month" name="month">
+    <option value="january">一月</option>
+    <option value="february">二月</option>
+    <option value="march">三月</option>
+    <option value="april">四月</option>
+    <option value="may">五月</option>
+    <option value="june">六月</option>
+    <option value="july">七月</option>
+    <option value="august">八月</option>
+    <option value="september">九月</option>
+    <option value="october">十月</option>
+    <option value="november">十一月</option>
+    <option value="december">十二月</option>
+  </select><br><br>
+  <input type="submit" value="查詢">
+</form>
+
+<p id="report_result"></p>
+
+<canvas id="total_chart"></canvas>
+
+<script>
+  document.getElementById('animal_report_form').addEventListener('submit', async function(event) {
+    event.preventDefault();
+
+    const formData = new FormData(this);
+    const reportType = formData.get('report_type');
+    const year = formData.get('year');
+    const month = formData.get('month');
+
+    const res = await fetch('/api/get_report', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ reportType, year, month })
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      document.getElementById('report_result').innerText = ` 在 ${data.month} ${data.year}被路殺的數量: ${data.count}`;
+
+      drawTotalChart(reportType);
+    } else if (res.status === 404) {
+      document.getElementById('report_result').innerText = 'Data not found for the specified year';
+    } else {
+      document.getElementById('report_result').innerText = 'Error occurred while fetching data';
+    }
+  });
+
+  async function fetchReportData(reportType) {
+    const res = await fetch(`/api/reports?reportType=${reportType}`);
+    const data = await res.json();
+    return data;
+  }
+
+  let totalChart;
+
+  async function drawTotalChart(reportType) {
+    const data = await fetchReportData(reportType);
+    const years = data.map(item => item.year);
+    const totals = data.map(item => item.total);
+    const ctx = document.getElementById('total_chart').getContext('2d');
+
+    if (totalChart) {
+      totalChart.destroy();
+    }
+
+    totalChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: years,
+        datasets: [{
+          label: '被路殺總數量',
+          data: totals,
+          backgroundColor: 'rgba(255, 99, 132, 0.2)',
+          borderColor: 'rgba(255, 99, 132, 1)',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        scales: {
+          y: {
+            beginAtZero: true
+          }
+        }
+      }
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    drawTotalChart('animal_reports');
+  });
+</script>
+
+<h1>動物路殺小問答</h1>
+
+<div class="forms-container">
+  <div class="form-container left">
+    <form id="animal_hit_by_car_form">
+      <label>你覺得哪個動物比較容易被路殺?</label><br>
+      <input type="radio" class="radio" id="cat" name="hit_by_car" value="cat">
+      <label class="radio-font" for="cat">貓</label><br>
+      <input type="radio" class="radio" id="dog" name="hit_by_car" value="dog">
+      <label class="radio-font" for="dog">狗</label><br><br>
+      <input type="submit" value="Submit">
+    </form>
+
+    <p id="answer"></p>
+  </div>
+
+  <div class="form-container right">
+    <form id="animalbird_hit_by_car_form">
+      <label>你覺得哪種鳥類比較容易被路殺?</label><br>
+      <input type="radio" class="radio" id="bird-1" name="hit_by_car" value="bird-1">
+      <label class="radio-font" for="bird-1">鴿子</label><br>
+      <input type="radio" class="radio" id="bird-2" name="hit_by_car" value="bird-2">
+      <label class="radio-font" for="bird-2">麻雀</label><br>
+      <input type="radio" class="radio" id="bird-3" name="hit_by_car" value="bird-3">
+      <label class="radio-font" for="bird-3">白頭翁</label><br><br>
+      <input type="submit" value="Submit">
+    </form>
+
+    <p id="answer-bird"></p>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('animal_hit_by_car_form').addEventListener('submit', function(event) {
+      event.preventDefault(); // 阻止表單的默認提交行為
+      var answerElement = document.getElementById('answer');
+      var selectedOption = document.querySelector('input[name="hit_by_car"]:checked');
+      if (selectedOption) {
+        answerElement.innerText = '正確答案為貓';
+      } else {
+        answerElement.innerText = '請選擇一個選項';
+      }
+      setTimeout(function() {
+        answerElement.innerText = '';
+      }, 3000);
+    });
+
+    document.getElementById('animalbird_hit_by_car_form').addEventListener('submit', function(event) {
+      event.preventDefault(); // 阻止表單的默認提交行為
+      var answerElement = document.getElementById('answer-bird');
+      var selectedOption = document.querySelector('input[name="hit_by_car"]:checked');
+      if (selectedOption) {
+        answerElement.innerText = '正確答案為鴿子';
+      } else {
+        answerElement.innerText = '請選擇一個選項';
+      }
+      setTimeout(function() {
+        answerElement.innerText = '';
+      }, 3000);
+    });
+  });
+</script>
+</body>
+</html>
