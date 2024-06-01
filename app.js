@@ -31,7 +31,7 @@ module.exports = app;
 const cors = require('cors');
 app.use(cors());
 
-app.post('/api/get_report', (req, res) => {
+app.post('web-roadkill-finalproject.azurewebsites.net/api/get_report', (req, res) => {
     const { reportType, year, month } = req.body;
     const validMonths = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
     const validReportTypes = ["animal_reports", "cats", "dogs"];
@@ -61,7 +61,7 @@ app.post('/api/get_report', (req, res) => {
     });
 });
 
-app.get('/api/reports', (req, res) => {
+app.get('web-roadkill-finalproject.azurewebsites.net/api/reports', (req, res) => {
     const reportType = req.query.reportType || 'animal_reports';
     const validReportTypes = ["animal_reports", "cats", "dogs"];
 
